@@ -1,168 +1,333 @@
-
 <?php
 session_start();
-include('include/config.php');
-if(strlen($_SESSION['alogin'])==0)
-	{	
-header('location:index.php');
+error_reporting(0);
+include('includes/config.php');
+$cid=intval($_GET['cid']);
+if(isset($_GET['action']) && $_GET['action']=="add"){
+	$id=intval($_GET['id']);
+	if(isset($_SESSION['cart'][$id])){
+		$_SESSION['cart'][$id]['quantity']++;
+	}else{
+		$sql_p="SELECT * FROM products WHERE id={$id}";
+		$query_p=mysqli_query($con,$sql_p);
+		if(mysqli_num_rows($query_p)!=0){
+			$row_p=mysqli_fetch_array($query_p);
+			$_SESSION['cart'][$row_p['id']]=array("quantity" => 1, "price" => $row_p['productPrice']);
+				echo "<script>alert('Product has been added to the cart')</script>";
+		echo "<script type='text/javascript'> document.location ='my-cart.php'; </script>";
+		}else{
+			$message="Product ID is invalid";
+		}
+	}
+	
 }
-else{
-date_default_timezone_set('Asia/Kolkata');// change according timezone
-$currentTime = date( 'd-m-Y h:i:s A', time () );
-
-
-if(isset($_POST['submit']))
+// COde for Wishlist
+if(isset($_GET['pid']) && $_GET['action']=="wishlist" ){
+	if(strlen($_SESSION['login'])==0)
+    {   
+header('location:login.php');
+}
+else
 {
-	$category=$_POST['category'];
-	$description=$_POST['description'];
-$sql=mysqli_query($con,"insert into category(categoryName,categoryDescription) values('$category','$description')");
-$_SESSION['msg']="Category Created !!";
+mysqli_query($con,"insert into wishlist(userId,productId) values('".$_SESSION['id']."','".$_GET['pid']."')");
+echo "<script>alert('Product aaded in wishlist');</script>";
+header('location:my-wishlist.php');
 
 }
-
-if(isset($_GET['del']))
-		  {
-		          mysqli_query($con,"delete from category where id = '".$_GET['id']."'");
-                  $_SESSION['delmsg']="Category deleted !!";
-		  }
-
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Admin| Category</title>
-	<link type="text/css" href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
-	<link type="text/css" href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-	<link type="text/css" href="css/theme.css" rel="stylesheet">
-	<link type="text/css" href="images/icons/css/font-awesome.css" rel="stylesheet">
-	<link type="text/css" href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600' rel='stylesheet'>
-</head>
-<body>
-<?php include('include/header.php');?>
+	<head>
+		<!-- Meta -->
+		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<meta name="description" content="">
+		<meta name="author" content="">
+	    <meta name="keywords" content="MediaCenter, Template, eCommerce">
+	    <meta name="robots" content="all">
 
-	<div class="wrapper">
-		<div class="container">
-			<div class="row">
-<?php include('include/sidebar.php');?>				
-			<div class="span9">
-					<div class="content">
+	    <title>Product Category</title>
 
-						<div class="module">
-							<div class="module-head">
-								<h3>Category</h3>
-							</div>
-							<div class="module-body">
+	    <!-- Bootstrap Core CSS -->
+	    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	    
+	    <!-- Customizable CSS -->
+	    <link rel="stylesheet" href="assets/css/main.css">
+	    <link rel="stylesheet" href="assets/css/green.css">
+	    <link rel="stylesheet" href="assets/css/owl.carousel.css">
+		<link rel="stylesheet" href="assets/css/owl.transitions.css">
+		<!--<link rel="stylesheet" href="assets/css/owl.theme.css">-->
+		<link href="assets/css/lightbox.css" rel="stylesheet">
+		<link rel="stylesheet" href="assets/css/animate.min.css">
+		<link rel="stylesheet" href="assets/css/rateit.css">
+		<link rel="stylesheet" href="assets/css/bootstrap-select.min.css">
 
-									<?php if(isset($_POST['submit']))
-{?>
-									<div class="alert alert-success">
-										<button type="button" class="close" data-dismiss="alert">×</button>
-									<strong>Well done!</strong>	<?php echo htmlentities($_SESSION['msg']);?><?php echo htmlentities($_SESSION['msg']="");?>
-									</div>
-<?php } ?>
+		<!-- Demo Purpose Only. Should be removed in production -->
+		<link rel="stylesheet" href="assets/css/config.css">
 
+		<link href="assets/css/green.css" rel="alternate stylesheet" title="Green color">
+		<link href="assets/css/blue.css" rel="alternate stylesheet" title="Blue color">
+		<link href="assets/css/red.css" rel="alternate stylesheet" title="Red color">
+		<link href="assets/css/orange.css" rel="alternate stylesheet" title="Orange color">
+		<link href="assets/css/dark-green.css" rel="alternate stylesheet" title="Darkgreen color">
+		<!-- Demo Purpose Only. Should be removed in production : END -->
 
-									<?php if(isset($_GET['del']))
-{?>
-									<div class="alert alert-error">
-										<button type="button" class="close" data-dismiss="alert">×</button>
-									<strong>Oh snap!</strong> 	<?php echo htmlentities($_SESSION['delmsg']);?><?php echo htmlentities($_SESSION['delmsg']="");?>
-									</div>
-<?php } ?>
+		
+		<!-- Icons/Glyphs -->
+		<link rel="stylesheet" href="assets/css/font-awesome.min.css">
 
-									<br />
+        <!-- Fonts --> 
+		<link href='http://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
+		
+		<!-- Favicon -->
+		<link rel="shortcut icon" href="assets/images/favicon.ico">
 
-			<form class="form-horizontal row-fluid" name="Category" method="post" >
-									
-<div class="control-group">
-<label class="control-label" for="basicinput">Category Name</label>
-<div class="controls">
-<input type="text" placeholder="Enter category Name"  name="category" class="span8 tip" required>
-</div>
-</div>
+		<!-- HTML5 elements and media queries Support for IE8 : HTML5 shim and Respond.js -->
+		<!--[if lt IE 9]>
+			<script src="assets/js/html5shiv.js"></script>
+			<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
 
+	</head>
+    <body class="cnt-home">
+	
+<header class="header-style-1">
 
-<div class="control-group">
-											<label class="control-label" for="basicinput">Description</label>
-											<div class="controls">
-												<textarea class="span8" name="description" rows="5"></textarea>
-											</div>
-										</div>
+	<!-- ============================================== TOP MENU ============================================== -->
+<?php include('includes/top-header.php');?>
+<!-- ============================================== TOP MENU : END ============================================== -->
+<?php include('includes/main-header.php');?>
+	<!-- ============================================== NAVBAR ============================================== -->
+<?php include('includes/menu-bar.php');?>
+<!-- ============================================== NAVBAR : END ============================================== -->
 
-	<div class="control-group">
-											<div class="controls">
-												<button type="submit" name="submit" class="btn">Create</button>
-											</div>
-										</div>
-									</form>
-							</div>
-						</div>
+</header>
+<!-- ============================================== HEADER : END ============================================== -->
+</div><!-- /.breadcrumb -->
+<div class="body-content outer-top-xs">
+	<div class='container'>
+		<div class='row outer-bottom-sm'>
+			<div class='col-md-3 sidebar'>
+	            <!-- ================================== TOP NAVIGATION ================================== -->
+<div class="side-menu animate-dropdown outer-bottom-xs">       
+<div class="side-menu animate-dropdown outer-bottom-xs">
+    <div class="head"><i class="icon fa fa-align-justify fa-fw"></i>Sub Categories</div>        
+    <nav class="yamm megamenu-horizontal" role="navigation">
+  
+        <ul class="nav">
+            <li class="dropdown menu-item">
+              <?php $sql=mysqli_query($con,"select id,subcategory  from subcategory where categoryid='$cid'");
 
-
-	<div class="module">
-							<div class="module-head">
-								<h3>Manage Categories</h3>
-							</div>
-							<div class="module-body table">
-								<table cellpadding="0" cellspacing="0" border="0" class="datatable-1 table table-bordered table-striped	 display" width="100%">
-									<thead>
-										<tr>
-											<th>#</th>
-											<th>Category</th>
-											<th>Description</th>
-											<th>Creation date</th>
-											<th>Last Updated</th>
-											<th>Action</th>
-										</tr>
-									</thead>
-									<tbody>
-
-<?php $query=mysqli_query($con,"select * from category");
-$cnt=1;
-while($row=mysqli_fetch_array($query))
+while($row=mysqli_fetch_array($sql))
 {
-?>									
-										<tr>
-											<td><?php echo htmlentities($cnt);?></td>
-											<td><?php echo htmlentities($row['categoryName']);?></td>
-											<td><?php echo htmlentities($row['categoryDescription']);?></td>
-											<td> <?php echo htmlentities($row['creationDate']);?></td>
-											<td><?php echo htmlentities($row['updationDate']);?></td>
-											<td>
-											<a href="edit-category.php?id=<?php echo $row['id']?>" ><i class="icon-edit"></i></a>
-											<a href="category.php?id=<?php echo $row['id']?>&del=delete" onClick="return confirm('Are you sure you want to delete?')"><i class="icon-remove-sign"></i></a></td>
-										</tr>
-										<?php $cnt=$cnt+1; } ?>
-										
-								</table>
-							</div>
-						</div>						
+    ?>
+                <a href="sub-category.php?scid=<?php echo $row['id'];?>" class="dropdown-toggle"><i class="icon fa fa-desktop fa-fw"></i>
+                <?php echo $row['subcategory'];?></a>
+                <?php }?>
+                        
+</li>
+</ul>
+    </nav>
+</div>
+</div><!-- /.side-menu -->
+<!-- ================================== TOP NAVIGATION : END ================================== -->	            <div class="sidebar-module-container">
+	            	<h3 class="section-title">shop by</h3>
+	            	<div class="sidebar-filter">
+		            	<!-- ============================================== SIDEBAR CATEGORY ============================================== -->
+<div class="sidebar-widget wow fadeInUp outer-bottom-xs ">
+	<div class="widget-header m-t-20">
+		<h4 class="widget-title">Category</h4>
+	</div>
+	<div class="sidebar-widget-body m-t-10">
+	         <?php $sql=mysqli_query($con,"select id,categoryName  from category");
+while($row=mysqli_fetch_array($sql))
+{
+    ?>
+		<div class="accordion">
+	    	<div class="accordion-group">
+	            <div class="accordion-heading">
+	                <a href="category.php?cid=<?php echo $row['id'];?>"  class="accordion-toggle collapsed">
+	                   <?php echo $row['categoryName'];?>
+	                </a>
+	            </div>  
+	        </div>
+	    </div>
+	    <?php } ?>
+	</div><!-- /.sidebar-widget-body -->
+</div><!-- /.sidebar-widget -->
 
-						
-						
-					</div><!--/.content-->
-				</div><!--/.span9-->
+
+
+    
+<!-- ============================================== COLOR: END ============================================== -->
+
+	            	</div><!-- /.sidebar-filter -->
+	            </div><!-- /.sidebar-module-container -->
+            </div><!-- /.sidebar -->
+			<div class='col-md-9'>
+					<!-- ========================================== SECTION – HERO ========================================= -->
+
+	<div id="category" class="category-carousel hidden-xs">
+		<div class="item">	
+			<div class="image">
+				<img src="assets/images/banners/cat-banner-1.jpg" alt="" class="img-responsive">
 			</div>
-		</div><!--/.container-->
-	</div><!--/.wrapper-->
+			<div class="container-fluid">
+				<div class="caption vertical-top text-left">
+					<div class="big-text">
+						<br />
+					</div>
 
-<?php include('include/footer.php');?>
+					       <?php $sql=mysqli_query($con,"select categoryName  from category where id='$cid'");
+while($row=mysqli_fetch_array($sql))
+{
+    ?>
 
-	<script src="scripts/jquery-1.9.1.min.js" type="text/javascript"></script>
-	<script src="scripts/jquery-ui-1.10.1.custom.min.js" type="text/javascript"></script>
-	<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
-	<script src="scripts/flot/jquery.flot.js" type="text/javascript"></script>
-	<script src="scripts/datatables/jquery.dataTables.js"></script>
+					<div class="excerpt hidden-sm hidden-md">
+						<?php echo htmlentities($row['categoryName']);?>
+					</div>
+			<?php } ?>
+			
+				</div><!-- /.caption -->
+			</div><!-- /.container-fluid -->
+		</div>
+</div>
+
+				<div class="search-result-container">
+					<div id="myTabContent" class="tab-content">
+						<div class="tab-pane active " id="grid-container">
+							<div class="category-product  inner-top-vs">
+								<div class="row">									
+			<?php
+$ret=mysqli_query($con,"select * from products where category='$cid'");
+$num=mysqli_num_rows($ret);
+if($num>0)
+{
+while ($row=mysqli_fetch_array($ret)) 
+{?>							
+		<div class="col-sm-6 col-md-4 wow fadeInUp">
+			<div class="products">				
+	<div class="product">		
+		<div class="product-image">
+			<div class="image">
+				<a href="product-details.php?pid=<?php echo htmlentities($row['id']);?>"><img  src="assets/images/blank.gif" data-echo="admin/productimages/<?php echo htmlentities($row['id']);?>/<?php echo htmlentities($row['productImage1']);?>" alt="" width="200" height="300"></a>
+			</div><!-- /.image -->			                      		   
+		</div><!-- /.product-image -->
+			
+		
+		<div class="product-info text-left">
+			<h3 class="name"><a href="product-details.php?pid=<?php echo htmlentities($row['id']);?>"><?php echo htmlentities($row['productName']);?></a></h3>
+			<div class="rating rateit-small"></div>
+			<div class="description"></div>
+
+			<div class="product-price">	
+				<span class="price">
+					Rs. <?php echo htmlentities($row['productPrice']);?>			</span>
+										     <span class="price-before-discount">Rs. <?php echo htmlentities($row['productPriceBeforeDiscount']);?></span>
+									
+			</div><!-- /.product-price -->
+			
+		</div><!-- /.product-info -->
+					<div class="cart clearfix animate-effect">
+				<div class="action">
+					<ul class="list-unstyled">
+						<li class="add-cart-button btn-group">
+						
+								<?php if($row['productAvailability']=='In Stock'){?>
+										<button class="btn btn-primary icon" data-toggle="dropdown" type="button">
+								<i class="fa fa-shopping-cart"></i>													
+							</button>
+							<a href="category.php?page=product&action=add&id=<?php echo $row['id']; ?>">
+							<button class="btn btn-primary" type="button">Add to cart</button></a>
+								<?php } else {?>
+							<div class="action" style="color:red">Out of Stock</div>
+					<?php } ?>
+													
+						</li>
+	                   
+		                <li class="lnk wishlist">
+							<a class="add-to-cart" href="category.php?pid=<?php echo htmlentities($row['id'])?>&&action=wishlist" title="Wishlist">
+								 <i class="icon fa fa-heart"></i>
+							</a>
+						</li>
+
+						
+					</ul>
+				</div><!-- /.action -->
+			</div><!-- /.cart -->
+			</div>
+			</div>
+		</div>
+	  <?php } } else {?>
+	
+		<div class="col-sm-6 col-md-4 wow fadeInUp"> <h3>No Product Found</h3>
+		</div>
+		
+<?php } ?>	
+		
+	
+		
+		
+	
+		
+	
+		
+	
+		
+										</div><!-- /.row -->
+							</div><!-- /.category-product -->
+						
+						</div><!-- /.tab-pane -->
+						
+				
+
+				</div><!-- /.search-result-container -->
+
+			</div><!-- /.col -->
+		</div></div>
+		<?php include('includes/brands-slider.php');?>
+
+</div>
+</div>
+<?php include('includes/footer.php');?>
+	<script src="assets/js/jquery-1.11.1.min.js"></script>
+	
+	<script src="assets/js/bootstrap.min.js"></script>
+	
+	<script src="assets/js/bootstrap-hover-dropdown.min.js"></script>
+	<script src="assets/js/owl.carousel.min.js"></script>
+	
+	<script src="assets/js/echo.min.js"></script>
+	<script src="assets/js/jquery.easing-1.3.min.js"></script>
+	<script src="assets/js/bootstrap-slider.min.js"></script>
+    <script src="assets/js/jquery.rateit.min.js"></script>
+    <script type="text/javascript" src="assets/js/lightbox.min.js"></script>
+    <script src="assets/js/bootstrap-select.min.js"></script>
+    <script src="assets/js/wow.min.js"></script>
+	<script src="assets/js/scripts.js"></script>
+
+	<!-- For demo purposes – can be removed on production -->
+	
+	<script src="switchstylesheet/switchstylesheet.js"></script>
+	
 	<script>
-		$(document).ready(function() {
-			$('.datatable-1').dataTable();
-			$('.dataTables_paginate').addClass("btn-group datatable-pagination");
-			$('.dataTables_paginate > a').wrapInner('<span />');
-			$('.dataTables_paginate > a:first-child').append('<i class="icon-chevron-left shaded"></i>');
-			$('.dataTables_paginate > a:last-child').append('<i class="icon-chevron-right shaded"></i>');
-		} );
+		$(document).ready(function(){ 
+			$(".changecolor").switchstylesheet( { seperator:"color"} );
+			$('.show-theme-options').click(function(){
+				$(this).parent().toggleClass('open');
+				return false;
+			});
+		});
+
+		$(window).bind("load", function() {
+		   $('.show-theme-options').delay(2000).trigger('click');
+		});
 	</script>
+	<!-- For demo purposes – can be removed on production : End -->
+
+	
+
 </body>
-<?php } ?>
+</html>
